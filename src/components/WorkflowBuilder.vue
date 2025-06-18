@@ -65,35 +65,57 @@
             <div v-if="step.conditions && step.conditions.length > 0" class="mt-2 text-xs text-blue-500">
               {{ step.conditions.length }} condition{{ step.conditions.length === 1 ? '' : 's' }}
             </div>
+            <div v-if="step.outputProcessor" class="mt-2 text-xs text-purple-500">
+              Output Processor
+            </div>
           </div>
           
           <!-- Condition arrows -->
           <template v-for="step in workflow.steps" :key="'conditions-' + step.id">
             <template v-for="condition in step.conditions" :key="condition.id">
-              <div v-if="getStepById(condition.sourceStepId) && getStepById(condition.targetStepId)" class="absolute pointer-events-none">
+              <!-- True path arrow -->
+              <div v-if="getStepById(condition.trueTargetStepId)" class="absolute pointer-events-none">
                 <svg 
                   class="absolute top-0 left-0 w-full h-full"
                   style="overflow: visible"
                 >
                   <line 
-                    :x1="getStepById(condition.sourceStepId)!.position.x + 100" 
-                    :y1="getStepById(condition.sourceStepId)!.position.y + 20" 
-                    :x2="getStepById(condition.targetStepId)!.position.x" 
-                    :y2="getStepById(condition.targetStepId)!.position.y + 20"
-                    stroke="#94a3b8" 
+                    :x1="getStepById(step.id)!.position.x + 100" 
+                    :y1="getStepById(step.id)!.position.y + 20" 
+                    :x2="getStepById(condition.trueTargetStepId)!.position.x" 
+                    :y2="getStepById(condition.trueTargetStepId)!.position.y + 20"
+                    stroke="#10b981" 
                     stroke-width="2" 
-                    marker-end="url(#arrowhead)"
+                    marker-end="url(#arrowhead-true)"
                   />
                 </svg>
-                <div 
-                  class="absolute bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded"
-                  :style="{ 
-                    left: (getStepById(condition.sourceStepId)!.position.x + getStepById(condition.targetStepId)!.position.x) / 2 + 'px', 
-                    top: (getStepById(condition.sourceStepId)!.position.y + getStepById(condition.targetStepId)!.position.y) / 2 + 'px'
-                  }"
+              </div>
+              
+              <!-- False path arrow -->
+              <div v-if="condition.falseTargetStepId && getStepById(condition.falseTargetStepId)" class="absolute pointer-events-none">
+                <svg 
+                  class="absolute top-0 left-0 w-full h-full"
+                  style="overflow: visible"
                 >
-                  {{ condition.description }}
-                </div>
+                  <line 
+                    :x1="getStepById(step.id)!.position?.x + 100" 
+                    :y1="getStepById(step.id)!.position?.y + 40" 
+                    :x2="getStepById(condition.falseTargetStepId)!.position.x" 
+                    :y2="getStepById(condition.falseTargetStepId)!.position.y + 40"
+                    stroke="#ef4444" 
+                    stroke-width="2" 
+                    marker-end="url(#arrowhead-false)"
+                  />
+                </svg>
+              </div>
+              
+              <!-- Condition label -->
+              <div 
+                v-if="getStepById(condition.trueTargetStepId) || getStepById(condition.falseTargetStepId)"
+                class="absolute bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded"
+
+              >
+                {{ condition.description }}
               </div>
             </template>
           </template>
@@ -102,14 +124,24 @@
           <svg style="position: absolute; width: 0; height: 0">
             <defs>
               <marker 
-                id="arrowhead" 
+                id="arrowhead-true" 
                 markerWidth="10" 
                 markerHeight="7" 
                 refX="10" 
                 refY="3.5" 
                 orient="auto"
               >
-                <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+                <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+              </marker>
+              <marker 
+                id="arrowhead-false" 
+                markerWidth="10" 
+                markerHeight="7" 
+                refX="10" 
+                refY="3.5" 
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
               </marker>
             </defs>
           </svg>
@@ -151,19 +183,34 @@
             />
           </div>
           
+          <!-- Output processor -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">Output Processor (Optional)</label>
+            <textarea
+              v-model="selectedStep.outputProcessor"
+              @input="handleUpdateStep(selectedStep)"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white resize-none"
+              placeholder="JavaScript expression to modify output. Use 'output' for step result. Example: output.toUpperCase()"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              This expression will process the step's output before passing to next steps.
+            </p>
+          </div>
+          
           <!-- Position -->
           <div class="mb-4">
             <label class="block text-sm font-medium mb-2">Position</label>
             <div class="grid grid-cols-2 gap-2">
               <input
-                v-model.number="selectedStep.position.x"
+                v-model="selectedStep.position.x"
                 @input="handleUpdateStep(selectedStep)"
                 type="number"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 placeholder="X"
               />
               <input
-                v-model.number="selectedStep.position.y"
+                v-model="selectedStep.position.y"
                 @input="handleUpdateStep(selectedStep)"
                 type="number"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
@@ -177,7 +224,11 @@
             <h4 class="font-medium mb-3">Conditions</h4>
             
             <!-- Existing conditions -->
-            <div v-for="condition in selectedStep.conditions" :key="condition.id" class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mb-2">
+            <div 
+              v-for="condition in selectedStep.conditions" 
+              :key="condition.id" 
+              class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mb-2"
+            >
               <div class="flex justify-between">
                 <span class="font-medium">{{ condition.description }}</span>
                 <button 
@@ -187,11 +238,18 @@
                   <X class="w-4 h-4" />
                 </button>
               </div>
+              
+              <div class="grid grid-cols-2 gap-1 mt-2">
+                <div class="text-xs text-green-600 dark:text-green-400">
+                  ✓ {{ getStepById(condition.trueTargetStepId)?.name || '?' }}
+                </div>
+                <div class="text-xs text-red-600 dark:text-red-400">
+                  ✗ {{ condition.falseTargetStepId ? (getStepById(condition.falseTargetStepId)?.name || '?') : 'Stop' }}
+                </div>
+              </div>
+              
               <div class="text-xs mt-1 text-gray-500 dark:text-gray-400">
                 {{ condition.expression }}
-              </div>
-              <div class="text-xs mt-1 text-blue-500">
-                To: {{ getStepById(condition.targetStepId)?.name || 'Unknown' }}
               </div>
             </div>
             
@@ -209,9 +267,9 @@
               <h4 class="font-medium mb-2">New Condition</h4>
               
               <div class="mb-3">
-                <label class="block text-sm mb-1">Target Step</label>
+                <label class="block text-sm mb-1">On True, go to:</label>
                 <select
-                  v-model="newCondition.targetStepId"
+                  v-model="newCondition.trueTargetStepId"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select target step</option>
@@ -226,9 +284,26 @@
               </div>
               
               <div class="mb-3">
+                <label class="block text-sm mb-1">On False, go to (optional):</label>
+                <select
+                  v-model="newCondition.falseTargetStepId"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                >
+                  <option :value="null">Stop execution (no next step)</option>
+                  <option 
+                    v-for="step in workflow.steps.filter(s => s.id !== selectedStep?.id)"
+                    :key="step.id" 
+                    :value="step.id"
+                  >
+                    {{ step.name }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
                 <label class="block text-sm mb-1">Condition Template</label>
                 <select
-                  @change="handleTemplateSelect"
+                  @change="handleTemplateSelect($event)"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select a template</option>
@@ -257,7 +332,7 @@
                 <input
                   v-model="newCondition.description"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  class="w full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   placeholder="Human-readable description"
                 />
               </div>
@@ -271,7 +346,7 @@
                 </button>
                 <button 
                   @click="handleSaveCondition"
-                  :disabled="!newCondition.targetStepId || !newCondition.expression"
+                  :disabled="!newCondition.trueTargetStepId || !newCondition.expression"
                   class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
                 >
                   Save Condition
@@ -295,10 +370,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { X, Plus, ListTree, GitBranch } from 'lucide-vue-next';
-import { Workflow, WorkflowStep, _Condition } from '../types/appTypes';
-import type { conditionTemplates } from '../constants/conditionTemplates';
+import { ref } from 'vue';
+import { X, Plus, ListTree } from 'lucide-vue-next';
+import type { Workflow, WorkflowStep, Condition } from '../types/appTypes';
+import { conditionTemplates } from '../constants/conditionTemplates';
 
 interface Props {
   workflow: Workflow;
@@ -314,7 +389,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const selectedStep = ref<WorkflowStep | null>(null);
-const newCondition = ref<Omit<Condition, 'id'> | null>(null);
+const newCondition = ref<Omit<Condition, 'id' | 'sourceStepId'> | null>(null);
 
 const updateWorkflowName = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -326,9 +401,11 @@ const handleAddStep = () => {
     id: `step-${Date.now()}`,
     name: `Step ${props.workflow.steps.length + 1}`,
     prompt: '',
+    outputProcessor: '',
     position: { x: 100, y: 100 + (props.workflow.steps.length * 120) }
   };
   emit('update', { ...props.workflow, steps: [...props.workflow.steps, newStep] });
+  selectedStep.value = newStep;
 };
 
 const handleUpdateStep = (step: WorkflowStep) => {
@@ -345,7 +422,9 @@ const handleDeleteStep = (id: string) => {
     steps: updatedSteps.map(step => ({
       ...step,
       conditions: step.conditions?.filter(c => 
-        c.sourceStepId !== id && c.targetStepId !== id
+        c.sourceStepId !== id && 
+        c.trueTargetStepId !== id && 
+        c.falseTargetStepId !== id
       )
     }))
   };
@@ -357,8 +436,8 @@ const handleDeleteStep = (id: string) => {
 const handleAddCondition = () => {
   if (!selectedStep.value) return;
   newCondition.value = {
-    sourceStepId: selectedStep.value.id,
-    targetStepId: '',
+    trueTargetStepId: '',
+    falseTargetStepId: null,
     expression: '',
     description: ''
   };
@@ -369,7 +448,7 @@ const handleDeleteCondition = (conditionId: string) => {
   
   const updatedStep = {
     ...selectedStep.value,
-    conditions: selectedStep.value.conditions?.filter(c => c.id !== conditionId)
+    conditions: (selectedStep.value.conditions || []).filter(c => c.id !== conditionId)
   };
   
   selectedStep.value = updatedStep;
@@ -379,6 +458,7 @@ const handleDeleteCondition = (conditionId: string) => {
 const handleTemplateSelect = (event: Event) => {
   const target = event.target as HTMLSelectElement;
   const template = conditionTemplates.find(t => t.id === target.value);
+  
   if (template && newCondition.value) {
     newCondition.value = {
       ...newCondition.value,
@@ -389,11 +469,17 @@ const handleTemplateSelect = (event: Event) => {
 };
 
 const handleSaveCondition = () => {
-  if (!newCondition.value || !newCondition.value.targetStepId || !newCondition.value.expression || !selectedStep.value) return;
+  if (!newCondition.value || 
+      !newCondition.value.trueTargetStepId || 
+      !newCondition.value.expression || 
+      !selectedStep.value) {
+    return;
+  }
   
   const condition: Condition = {
     ...newCondition.value,
-    id: `cond-${Date.now()}`
+    id: `cond-${Date.now()}`,
+    sourceStepId: selectedStep.value.id
   };
   
   const updatedStep = {
@@ -410,4 +496,3 @@ const getStepById = (id: string): WorkflowStep | undefined => {
   return props.workflow.steps.find(s => s.id === id);
 };
 </script>
-

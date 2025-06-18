@@ -1,10 +1,11 @@
-export type Condition = {
+export interface _Condition {
   id: string;
   sourceStepId: string;
-  targetStepId: string;
+  trueTargetStepId: string;  // Step to execute when condition is true
+  falseTargetStepId: string; // Step to execute when condition is false
   expression: string;
   description: string;
-};
+}
 export type PromptVariant = {
   id: string;
   prompt: string;
@@ -48,7 +49,7 @@ export type ComparisonResult = {
   loading: boolean;
 };
 
-export type WorkflowStep = {
+export type _WorkflowStep = {
   id: string;
   name: string;
   prompt: string;
@@ -58,7 +59,7 @@ export type WorkflowStep = {
 
 
 
-export type Workflow = {
+export type _Workflow = {
   id: string;
   name: string;
   steps: WorkflowStep[];
@@ -66,7 +67,7 @@ export type Workflow = {
   executions: WorkflowExecution[];
 };
 
-export type WorkflowExecution = {
+export type _WorkflowExecution = {
   id: string;
   createdAt: Date;
   steps: {
@@ -92,3 +93,44 @@ export type ConditionTemplate = {
   description: string;
 };
 
+
+
+/////
+
+export interface Workflow {
+  id: string;
+  name: string;
+  steps: WorkflowStep[];
+}
+
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  prompt: string;
+  outputProcessor?: string;
+  position: { x: number; y: number };
+  conditions?: Condition[];
+}
+
+export interface Condition {
+  id: string;
+  sourceStepId: string;
+  trueTargetStepId: string;
+  falseTargetStepId: string | null; // Now nullable
+  expression: string;
+  description: string;
+}
+
+export interface WorkflowExecution {
+  id: string;
+  createdAt: Date;
+  steps: ExecutionStep[];
+}
+
+export interface ExecutionStep {
+  stepId: string;
+  input: string;
+  output: string;
+  executedAt: Date;
+  success: boolean;
+}
