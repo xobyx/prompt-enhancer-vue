@@ -304,7 +304,7 @@
                       Temperature: {{ store.modelParams.temperature }}
                     </label>
                     <input 
-                      v-model.number="store.modelParams.temperature"
+                      v-model="store.modelParams.temperature"
                       type="range" 
                       min="0" 
                       max="1" 
@@ -315,11 +315,11 @@
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Tokens</label>
                     <input 
-                      v-model.number="store.modelParams.maxOutputTokens"
+                      v-model="store.modelParams.maxOutputTokens"
                       type="number" 
                       min="1" 
                       max="8192" 
-                      step="64" 
+                      
                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
@@ -328,9 +328,10 @@
               
               <!-- Submit Buttons -->
               <div class="flex gap-3 pt-2">
-                <button 
+                <button
                   type="submit"
                   :disabled="store.loading" 
+                 
                   class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   <template v-if="store.loading && !store.isComparing">
@@ -560,6 +561,7 @@ const copyToClipboard = async (text: string, id: string) => {
 };
 
 const handleSubmit = async (isReEnhance: boolean = false) => {
+  console.log("👍👍")
   if (!store.apiKey.trim() || !store.inputPrompt.trim()) {
     store.error = 'API Key and an input prompt are required.';
     return;
@@ -673,4 +675,3 @@ onMounted(() => {
   store.initializeProjects();
 });
 </script>
-
