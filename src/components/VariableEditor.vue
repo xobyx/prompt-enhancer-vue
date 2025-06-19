@@ -9,13 +9,13 @@
       <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 min-w-0">
         <input
           :value="varDef.name"
-          @input="updateVariableName(index, $event.target.value)"
+          @input="updateVariableName(index, ($event.target as HTMLInputElement)?.value || '')"
           placeholder="Variable name"
           class="w-full sm:flex-1 p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
         />
         <input
           :value="varDef.defaultValue"
-          @input="updateVariableValue(index, $event.target.value)"
+          @input="updateVariableValue(index, ($event.target as HTMLInputElement)?.value || '')"
           placeholder="Default value"
           class="w-full sm:flex-1 p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
         />

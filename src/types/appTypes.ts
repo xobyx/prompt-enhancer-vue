@@ -59,7 +59,7 @@ export type _WorkflowStep = {
 
 
 
-export type _Workflow = {
+export type Workflow = {
   id: string;
   name: string;
   steps: WorkflowStep[];
@@ -97,11 +97,7 @@ export type ConditionTemplate = {
 
 /////
 
-export interface Workflow {
-  id: string;
-  name: string;
-  steps: WorkflowStep[];
-}
+
 
 export interface WorkflowStep {
   id: string;

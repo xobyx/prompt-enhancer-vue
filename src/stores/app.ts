@@ -202,7 +202,7 @@ export const useAppStore = defineStore('app', () => {
     
     const updatedWorkflow = {
       ...activeWorkflow.value,
-      executions: [...activeWorkflow.value.executions, execution]
+      executions: [...(activeWorkflow.value.executions || []), execution]
     };
     
     const updatedProject = {

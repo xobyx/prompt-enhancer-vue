@@ -73,15 +73,15 @@
                   <line 
                     :x1="step.position.x + 264" 
                     :y1="step.position.y + 40" 
-                    :x2="getStepById(condition.trueTargetStepId).position.x" 
-                    :y2="getStepById(condition.trueTargetStepId).position.y + 40"
+                    :x2="getStepById(condition.trueTargetStepId)?.position.x || 0"
+                    :y2="(getStepById(condition.trueTargetStepId)?.position.y || 0) + 40"
                     stroke="#10b981" 
                     stroke-width="2" 
                     marker-end="url(#arrowhead-true)"
                   />
                   <!-- True condition label -->
                   <text 
-                    :x="(step.position.x + 264 + getStepById(condition.trueTargetStepId).position.x) / 2"
+                    :x="(step.position.x + 264 + (getStepById(condition.trueTargetStepId)?.position.x || 0)) / 2"
                     :y="step.position.y + 35"
                     class="fill-green-600 text-xs"
                     text-anchor="middle"
@@ -95,15 +95,15 @@
                   <line 
                     :x1="step.position.x + 264" 
                     :y1="step.position.y + 60" 
-                    :x2="getStepById(condition.falseTargetStepId).position.x" 
-                    :y2="getStepById(condition.falseTargetStepId).position.y + 60"
+                    :x2="getStepById(condition.falseTargetStepId)?.position.x || 0"
+                    :y2="(getStepById(condition.falseTargetStepId)?.position.y || 0) + 60"
                     stroke="#ef4444" 
                     stroke-width="2" 
                     marker-end="url(#arrowhead-false)"
                   />
                   <!-- False condition label -->
                   <text 
-                    :x="(step.position.x + 264 + getStepById(condition.falseTargetStepId).position.x) / 2"
+                    :x="(step.position.x + 264 + (getStepById(condition.falseTargetStepId)?.position.x || 0)) / 2"
                     :y="step.position.y + 80"
                     class="fill-red-600 text-xs"
                     text-anchor="middle"
@@ -499,7 +499,7 @@ const handleSaveCondition = () => {
   newCondition.value = null;
 };
 
-const getStepById = (id: string): WorkflowStep | undefined => {
+const getStepById = (id: string| null): WorkflowStep | undefined => {
   return props.workflow.steps.find(s => s.id === id);
 };
 </script>

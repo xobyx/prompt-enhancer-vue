@@ -2,7 +2,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2极l font-semibold text-gray-900 dark:text-white">
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
         Running Workflow: {{ workflow.name }}
       </h2>
       <div class="flex gap-2">
@@ -113,7 +113,7 @@
 import { ref, computed } from 'vue';
 import { AlertCircle, Check } from 'lucide-vue-next';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Workflow, WorkflowExecution } from '../types/appTypes';
+import type { Workflow, WorkflowExecution, WorkflowStep } from '../types/appTypes';
 import { safeEval, safeProcess, generateWorkflowDiagram } from '../utils/workflowUtils';
 
 interface Props {
@@ -182,7 +182,7 @@ const processPromptTemplate = (prompt: string, currentResults: Record<string, st
   return processedPrompt;
 };
 
-const areVariablesAvailable = (step: any, currentResults: Record<string, string>): boolean => {
+const areVariablesAvailable = (step: WorkflowStep, currentResults: Record<string, string>): boolean => {
   const referencedVars = getReferencedVariables(step.prompt);
   
   if (referencedVars.length === 0) {
@@ -199,7 +199,7 @@ const areVariablesAvailable = (step: any, currentResults: Record<string, string>
   });
 };
 
-const executeStep = async (step: any, currentResults: Record<string, string>) => {
+const executeStep = async (step: WorkflowStep, currentResults: Record<string, string>) => {
   addLog(`Starting step: ${step.name}`);
   
   const referencedVars = getReferencedVariables(step.prompt);
@@ -272,7 +272,7 @@ const executeStep = async (step: any, currentResults: Record<string, string>) =>
   }
 };
 
-const canExecuteStep = (step: any, currentResults: Record<string, string>, visited: Set<string>): boolean => {
+const canExecuteStep = (step: WorkflowStep, currentResults: Record<string, string>, visited: Set<string>): boolean => {
   if (visited.has(step.id)) {
     return false;
   }
@@ -280,186 +280,60 @@ const canExecuteStep = (step: any, currentResults: Record<string, string>, visit
   return areVariablesAvailable(step, currentResults);
 };
 
-const getReadySteps = (availableSteps: any[], currentResults: Record<string, string>, visited: Set<string>): any[] => {
+const getReadySteps = (availableSteps: WorkflowStep[], currentResults: Record<string, string>, visited: Set<string>): WorkflowStep[] => {
   return availableSteps.filter(step => canExecuteStep(step, currentResults, visited));
 };
 
-const _runWorkflow = async () => {
-  if (!props.workflow.steps.length) return;
-  
-  isRunning.value = true;
-  results.value = {};
-  errors.value = {};
-  executionLog.value = [];
-  addLog("Workflow execution started");
-  
-  try {
-    const execution: WorkflowExecution = {
-      id: `exec-${Date.now()}`,
-      createdAt: new Date(),
-      steps: []
-    };
+// Helper function to process step conditions and update execution queue
+const processStepConditions = (
+  step: WorkflowStep, 
+  output: string, 
+  currentResults: Record<string, string>, 
+  executionQueue: Set<string>, 
+  visited: Set<string>
+) => {
+  if (step.conditions && step.conditions.length > 0) {
+    addLog(`Evaluating ${step.conditions.length} conditions for step: ${step.name}`);
     
-    const startingSteps = props.workflow.steps.filter(step => {
-      const hasIncoming = props.workflow.steps.some(s => 
-        s.conditions?.some(c => c.trueTargetStepId === step.id || c.falseTargetStepId === step.id)
-      );
-      const hasTemplateDependencies = getReferencedVariables(step.prompt).length > 0;
-      return !hasIncoming && !hasTemplateDependencies;
-    });
-    
-    addLog(`Found ${startingSteps.length} starting steps`);
-    
-    const visited = new Set<string>();
-    const currentResults: Record<string, string> = {};
-    let remainingSteps = [...props.workflow.steps];
-    let executionRound = 1;
-    
-    while (remainingSteps.length > 0 && visited.size < props.workflow.steps.length) {
-      addLog(`Starting execution round ${executionRound}`);
-      
-      const readySteps = getReadySteps(remainingSteps, currentResults, visited);
-      
-      if (readySteps.length === 0) {
-        const unexecutedSteps = remainingSteps.filter(step => !visited.has(step.id));
-        if (unexecutedSteps.length > 0) {
-          const stepNames = unexecutedSteps.map(s => s.name).join(', ');
-          addLog(`No ready steps found. Remaining steps with unmet dependencies: ${stepNames}`);
-          
-          const nextStep = unexecutedSteps[0];
-          addLog(`Attempting to execute step with unmet dependencies: ${nextStep.name}`);
-          
-          try {
-            const output = await executeStep(nextStep, currentResults);
-            currentResults[nextStep.id] = output;
-            results.value = { ...results.value, [nextStep.id]: output };
-            visited.add(nextStep.id);
-            
-            execution.steps.push({
-              stepId: nextStep.id,
-              input: nextStep.prompt,
-              output,
-              executedAt: new Date(),
-              success: true
-            });
-            
-            addLog(`Successfully executed step with dependencies: ${nextStep.name}`);
-          } catch (error: any) {
-            errors.value = { ...errors.value, [nextStep.id]: error.message };
-            
-            execution.steps.push({
-              stepId: nextStep.id,
-              input: nextStep.prompt,
-              output: error.message,
-              executedAt: new Date(),
-              success: false
-            });
-            
-            addLog(`Failed to execute step: ${nextStep.name} - ${error.message}`);
-            visited.add(nextStep.id);
+    for (const condition of step.conditions) {
+      try {
+        const result = safeEval(condition.expression, { 
+          output, 
+          results: currentResults,
+          stepId: step.id
+        });
+        
+        addLog(
+          `Condition evaluated: ${condition.description}\n` +
+          `Expression: ${condition.expression}\n` +
+          `Result: ${result}`
+        );
+        
+        const targetStepId = result ? condition.trueTargetStepId : condition.falseTargetStepId;
+        
+        if (targetStepId && !visited.has(targetStepId)) {
+          const targetStep = props.workflow.steps.find(s => s.id === targetStepId);
+          if (targetStep) {
+            executionQueue.add(targetStepId); // Add to execution queue
+            addLog(`Condition result: ${result} -> Queued step: ${targetStep.name}`);
+          } else {
+            addLog(`No target step found for ID: ${targetStepId}`);
           }
+        } else if (targetStepId) {
+          addLog(`Target step ${targetStepId} already executed, skipping`);
         } else {
-          break;
+          addLog(`No target step defined for condition result: ${result} - stopping branch`);
         }
-      } else {
-        for (const step of readySteps) {
-          try {
-            const output = await executeStep(step, currentResults);
-            currentResults[step.id] = output;
-            results.value = { ...results.value, [step.id]: output };
-            visited.add(step.id);
-            
-            execution.steps.push({
-              stepId: step.id,
-              input: processPromptTemplate(step.prompt, currentResults),
-              output,
-              executedAt: new Date(),
-              success: true
-            });
-            
-            // Evaluate conditions and determine next steps
-            let nextSteps: any[] = [];
-            
-            if (step.conditions && step.conditions.length > 0) {
-              addLog(`Evaluating ${step.conditions.length} conditions for step: ${step.name}`);
-              
-              for (const condition of step.conditions) {
-                try {
-                  const result = safeEval(condition.expression, { 
-                    output, 
-                    results: currentResults,
-                    stepId: step.id
-                  });
-                  
-                  addLog(
-                    `Condition evaluated: ${condition.description}\n` +
-                    `Expression: ${condition.expression}\n` +
-                    `Result: ${result}`
-                  );
-                  
-                  const targetStepId = result ? condition.trueTargetStepId : condition.falseTargetStepId;
-                  
-                  if (targetStepId) {
-                    const targetStep = props.workflow.steps.find(s => s.id === targetStepId);
-                    if (targetStep) {
-                      nextSteps.push(targetStep);
-                      addLog(`Condition result: ${result} -> Next step: ${targetStep.name}`);
-                    } else {
-                      addLog(`No target step found for ID: ${targetStepId}`);
-                    }
-                  } else {
-                    addLog(`No target step defined for condition result: ${result} - stopping branch`);
-                  }
-                } catch (error: any) {
-                  addLog(
-                    `Condition evaluation failed: ${condition.description}\n` +
-                    `Expression: ${condition.expression}\n` +
-                    `Error: ${error.message}`
-                  );
-                }
-              }
-            }
-            
-            if (nextSteps.length > 0) {
-              addLog(`Condition met, ${nextSteps.length} conditional steps may be ready`);
-            }
-            
-          } catch (error: any) {
-            errors.value = { ...errors.value, [step.id]: error.message };
-            visited.add(step.id);
-            
-            execution.steps.push({
-              stepId: step.id,
-              input: step.prompt,
-              output: error.message,
-              executedAt: new Date(),
-              success: false
-            });
-            
-            addLog(`Error in step ${step.name}: ${error.message}`);
-          }
-        }
-      }
-      
-      remainingSteps = remainingSteps.filter(step => !visited.has(step.id));
-      executionRound++;
-      
-      if (executionRound > props.workflow.steps.length + 5) {
-        addLog("Maximum execution rounds reached, stopping workflow");
-        break;
+      } catch (error: any) {
+        addLog(
+          `Condition evaluation failed: ${condition.description}\n` +
+          `Expression: ${condition.expression}\n` +
+          `Error: ${error.message}`
+        );
       }
     }
-    
-    addLog(`Workflow execution completed. Executed ${visited.size}/${props.workflow.steps.length} steps`);
-    emit('complete', execution);
-    
-  } catch (error: any) {
-    addLog(`Workflow failed: ${error.message}`);
-  } finally {
-    isRunning.value = false;
   }
 };
-// Replace your runWorkflow function with this corrected version
 
 const runWorkflow = async () => {
   if (!props.workflow.steps.length) return;
@@ -501,13 +375,13 @@ const runWorkflow = async () => {
       // Get steps that are both queued AND ready (dependencies met)
       const stepsToExecute = Array.from(executionQueue)
         .map(stepId => props.workflow.steps.find(s => s.id === stepId))
-        .filter(step => step && canExecuteStep(step, currentResults, visited));
+        .filter((step): step is WorkflowStep => step !== undefined && canExecuteStep(step, currentResults, visited));
       
       if (stepsToExecute.length === 0) {
         // Check if we have queued steps that aren't ready due to dependencies
         const queuedSteps = Array.from(executionQueue)
           .map(stepId => props.workflow.steps.find(s => s.id === stepId))
-          .filter(step => step && !visited.has(step.id));
+          .filter((step): step is WorkflowStep => step !== undefined && !visited.has(step.id));
         
         if (queuedSteps.length > 0) {
           const stepNames = queuedSteps.map(s => s.name).join(', ');
@@ -515,40 +389,42 @@ const runWorkflow = async () => {
           
           // Try to execute one step with unmet dependencies (fallback)
           const nextStep = queuedSteps[0];
-          addLog(`Attempting to execute queued step with unmet dependencies: ${nextStep.name}`);
-          
-          try {
-            const output = await executeStep(nextStep, currentResults);
-            currentResults[nextStep.id] = output;
-            results.value = { ...results.value, [nextStep.id]: output };
-            visited.add(nextStep.id);
-            executionQueue.delete(nextStep.id); // Remove from queue
+          if (nextStep) {
+            addLog(`Attempting to execute queued step with unmet dependencies: ${nextStep.name}`);
             
-            execution.steps.push({
-              stepId: nextStep.id,
-              input: nextStep.prompt,
-              output,
-              executedAt: new Date(),
-              success: true
-            });
-            
-            // Process conditions and add next steps to queue
-            processStepConditions(nextStep, output, currentResults, executionQueue, visited);
-            
-          } catch (error: any) {
-            errors.value = { ...errors.value, [nextStep.id]: error.message };
-            visited.add(nextStep.id);
-            executionQueue.delete(nextStep.id);
-            
-            execution.steps.push({
-              stepId: nextStep.id,
-              input: nextStep.prompt,
-              output: error.message,
-              executedAt: new Date(),
-              success: false
-            });
-            
-            addLog(`Failed to execute queued step: ${nextStep.name} - ${error.message}`);
+            try {
+              const output = await executeStep(nextStep, currentResults);
+              currentResults[nextStep.id] = output;
+              results.value = { ...results.value, [nextStep.id]: output };
+              visited.add(nextStep.id);
+              executionQueue.delete(nextStep.id); // Remove from queue
+              
+              execution.steps.push({
+                stepId: nextStep.id,
+                input: nextStep.prompt,
+                output,
+                executedAt: new Date(),
+                success: true
+              });
+              
+              // Process conditions and add next steps to queue
+              processStepConditions(nextStep, output, currentResults, executionQueue, visited);
+              
+            } catch (error: any) {
+              errors.value = { ...errors.value, [nextStep.id]: error.message };
+              visited.add(nextStep.id);
+              executionQueue.delete(nextStep.id);
+              
+              execution.steps.push({
+                stepId: nextStep.id,
+                input: nextStep.prompt,
+                output: error.message,
+                executedAt: new Date(),
+                success: false
+              });
+              
+              addLog(`Failed to execute queued step: ${nextStep.name} - ${error.message}`);
+            }
           }
         } else {
           addLog("No more steps to execute");
@@ -608,57 +484,6 @@ const runWorkflow = async () => {
     addLog(`Workflow failed: ${error.message}`);
   } finally {
     isRunning.value = false;
-  }
-};
-
-// Helper function to process step conditions and update execution queue
-const processStepConditions = (
-  step: any, 
-  output: string, 
-  currentResults: Record<string, string>, 
-  executionQueue: Set<string>, 
-  visited: Set<string>
-) => {
-  if (step.conditions && step.conditions.length > 0) {
-    addLog(`Evaluating ${step.conditions.length} conditions for step: ${step.name}`);
-    
-    for (const condition of step.conditions) {
-      try {
-        const result = safeEval(condition.expression, { 
-          output, 
-          results: currentResults,
-          stepId: step.id
-        });
-        
-        addLog(
-          `Condition evaluated: ${condition.description}\n` +
-          `Expression: ${condition.expression}\n` +
-          `Result: ${result}`
-        );
-        
-        const targetStepId = result ? condition.trueTargetStepId : condition.falseTargetStepId;
-        
-        if (targetStepId && !visited.has(targetStepId)) {
-          const targetStep = props.workflow.steps.find(s => s.id === targetStepId);
-          if (targetStep) {
-            executionQueue.add(targetStepId); // Add to execution queue
-            addLog(`Condition result: ${result} -> Queued step: ${targetStep.name}`);
-          } else {
-            addLog(`No target step found for ID: ${targetStepId}`);
-          }
-        } else if (targetStepId) {
-          addLog(`Target step ${targetStepId} already executed, skipping`);
-        } else {
-          addLog(`No target step defined for condition result: ${result} - stopping branch`);
-        }
-      } catch (error: any) {
-        addLog(
-          `Condition evaluation failed: ${condition.description}\n` +
-          `Expression: ${condition.expression}\n` +
-          `Error: ${error.message}`
-        );
-      }
-    }
   }
 };
 </script>

@@ -107,14 +107,14 @@
               </div>
               <p class="text-sm text-gray-500 mb-4">
                 {{ workflow.steps.length }} steps, 
-                {{ workflow.executions.length }} execution{{ workflow.executions.length === 1 ? '' : 's' }}
+                {{ workflow.executions?.length || 0 }} execution{{ (workflow.executions?.length || 0) === 1 ? '' : 's' }}
               </p>
               <div class="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded max-h-32 overflow-auto">
                 <pre>{{ workflow.steps.map(s => s.name).join(' → ') }}</pre>
               </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-900 px-5 py-3 text-sm text-gray-500">
-              Created {{ formatDate(workflow.createdAt) }}
+              Created {{ workflow.createdAt ? formatDate(workflow.createdAt) : 'Unknown' }}
             </div>
           </div>
         </div>
@@ -542,7 +542,7 @@ const recentExecutions = computed(() => {
   
   return store.activeProject.workflows
     .flatMap(workflow => 
-      workflow.executions.map(execution => ({ workflow, execution }))
+      (workflow.executions || []).map(execution => ({ workflow, execution }))
     )
     .sort((a, b) => 
       b.execution.createdAt.getTime() - a.execution.createdAt.getTime()
@@ -571,7 +571,7 @@ const copyToClipboard = async (text: string, id: string) => {
   }
 };
 
-const handleSubmit = async (event,isReEnhance: boolean = false) => {
+const handleSubmit = async (event: Event,isReEnhance: boolean = false) => {
   console.log("👍👍")
   if (!store.apiKey.trim() || !store.inputPrompt.trim()) {
     store.error = 'API Key and an input prompt are required.';
@@ -635,7 +635,8 @@ const handleSubmit = async (event,isReEnhance: boolean = false) => {
 };
 
 const handleAnswerSubmit = () => {
-  handleSubmit(true);
+  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+handleSubmit(submitEvent,true);
 };
 
 const handleRunComparison = async (testPrompt: string) => {
@@ -643,7 +644,7 @@ const handleRunComparison = async (testPrompt: string) => {
   const variantsToTest = store.variants;
   const selected = variantsToTest.filter((v: PromptVariant) => store.selectedVariantsForComparison.includes(v.id));
 
-  store.comparisonResults = selected.map(v => ({ variantId: v.id, output: '', loading: true }));
+  store.comparisonResults = selected.map((v: any) => ({ variantId: v.id, output: '', loading: true }));
 
   const genAI = new GoogleGenerativeAI(store.apiKey);
   const model = genAI.getGenerativeModel({
@@ -666,7 +667,7 @@ const handleRunComparison = async (testPrompt: string) => {
   });
   
   for (const promise of promises) {
-    promise.then(res => {
+    promise.then((res: any) => {
       store.comparisonResults = store.comparisonResults.map(r => 
         r.variantId === res.variantId ? res : r
       );
