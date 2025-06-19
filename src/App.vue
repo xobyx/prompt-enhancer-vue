@@ -281,7 +281,17 @@
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-vertical" 
                   required
                 />
+                <VariableEditor v-if="store.variableDefinitions.length > 0" />
+  
+              <!-- Add variable button -->
+                <button 
+                  @click="store.addVariable('var1')"
+                  class="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800"
+                >
+                  <Plus class="w-4 h-4 mr-1" /> Add Variables to Prompt
+                </button>
               </div>
+
               
               <!-- Model Parameters -->
               <details class="border dark:border-gray-700 rounded-lg p-4">
@@ -329,8 +339,8 @@
               <!-- Submit Buttons -->
               <div class="flex gap-3 pt-2">
                 <button
+                  input="submit"
                   type="submit"
-                  :disabled="store.loading" 
                  
                   class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
@@ -467,6 +477,7 @@
                   :copied-id="store.copied"
                   @copy="copyToClipboard"
                   @toggle-comparison="store.toggleVariantForComparison"
+                  @setStartPrompt="(text,id)=>store.inputPrompt=text"
                 />
               </div>
             </div>
@@ -505,7 +516,7 @@ import MarkdownRenderer from './components/MarkdownRenderer.vue';
 import LoadingSkeleton from './components/LoadingSkeleton.vue';
 import HistoryPanel from './components/HistoryPanel.vue';
 import PromptCard from './components/PromptCard.vue';
-
+import VariableEditor from './components/VariableEditor.vue';
 // Store and utilities
 import { useAppStore } from './stores/app';
 import { promptVersions } from './constants/appConstants';
@@ -560,7 +571,7 @@ const copyToClipboard = async (text: string, id: string) => {
   }
 };
 
-const handleSubmit = async (isReEnhance: boolean = false) => {
+const handleSubmit = async (event,isReEnhance: boolean = false) => {
   console.log("👍👍")
   if (!store.apiKey.trim() || !store.inputPrompt.trim()) {
     store.error = 'API Key and an input prompt are required.';
@@ -569,6 +580,7 @@ const handleSubmit = async (isReEnhance: boolean = false) => {
   
   store.loading = true;
   store.error = '';
+  const promptWithVars = store.applyVariables(store.inputPrompt);
   
   if (!isReEnhance) {
     store.result = null;
@@ -580,7 +592,7 @@ const handleSubmit = async (isReEnhance: boolean = false) => {
 
   try {
     const selectedPromptData = promptVersions[store.selectedVersion as keyof typeof promptVersions];
-    let fullPrompt = `${selectedPromptData.prompt}\n\nORIGINAL PROMPT TO ENHANCE:\n"""\n${store.inputPrompt}\n"""`;
+    let fullPrompt = `${selectedPromptData.prompt}\n\nORIGINAL PROMPT TO ENHANCE:\n"""\n${promptWithVars}\n"""`;
 
     if (Object.keys(store.questionAnswers).length > 0 && isReEnhance) {
       fullPrompt += `\n\nADDITIONAL CONTEXT FROM USER ANSWERS:`;
@@ -601,7 +613,8 @@ const handleSubmit = async (isReEnhance: boolean = false) => {
     if (questions && questions.length > 0 && !isReEnhance) {
       store.showQuestionForm = true;
     }
-    
+    console.log("isReEnhance : " ,isReEnhance)
+    console.log("project",store.activeProject)
     if (!isReEnhance && store.activeProject) {
       const historyItem: PromptHistoryItem = { 
         id: Date.now().toString(), 
@@ -610,7 +623,7 @@ const handleSubmit = async (isReEnhance: boolean = false) => {
         version: store.selectedVersion, 
         result: jsonResponse 
       };
-      
+      console.log("historyItem",historyItem)
       store.addToHistory(historyItem);
     }
   } catch (err: any) {
@@ -675,3 +688,4 @@ onMounted(() => {
   store.initializeProjects();
 });
 </script>
+

@@ -16,7 +16,15 @@
           <Copy v-else class="w-4 h-4" />
           {{ copiedId === `prompt-${index}` ? "Copied!" : "Copy" }}
         </button>
-        <div class="flex items-center gap-1.5">
+        <button 
+          @click="$emit('setStartPrompt', prompt.prompt, `prompt-${index}`)" 
+          class="flex items-center gap-1.5 text-sm cursor-pointer text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+        >
+          <Check class="w-4 h-4 text-green-500" />
+
+          set as initial prompt 
+        </button>
+        <div class="flex items-center gap-1.5 justify-self-end">
           <input 
             :id="`compare-${prompt.id}`"
             type="checkbox" 
@@ -81,6 +89,7 @@ interface Props {
 interface Emits {
   (e: 'copy', text: string, id: string): void;
   (e: 'toggleComparison', variantId: string): void;
+  (e: 'setStartPrompt', text: string, id: string): void;
 }
 
 defineProps<Props>();

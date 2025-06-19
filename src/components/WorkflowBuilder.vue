@@ -37,91 +37,11 @@
         
         <!-- Workflow diagram -->
         <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 h-96 overflow-auto relative border border-gray-200 dark:border-gray-700">
-          <!-- Steps -->
-          <div 
-            v-for="step in workflow.steps"
-            :key="step.id"
-            :class="[
-              'absolute bg-white dark:bg-gray-700 border-2 rounded-lg p-4 w-64 cursor-pointer transition-all',
-              selectedStep?.id === step.id 
-                ? 'border-blue-500 shadow-lg' 
-                : 'border-gray-300 dark:border-gray-600'
-            ]"
-            :style="{ left: step.position.x + 'px', top: step.position.y + 'px' }"
-            @click="selectedStep = step"
+          <!-- SVG for arrows -->
+          <svg 
+            class="absolute top-0 left-0 w-full h-full pointer-events-none"
+            style="z-index: 1;"
           >
-            <div class="flex justify-between">
-              <h3 class="font-semibold truncate">{{ step.name }}</h3>
-              <button 
-                @click.stop="handleDeleteStep(step.id)"
-                class="text-red-500 hover:text-red-700"
-              >
-                <X class="w-4 h-4" />
-              </button>
-            </div>
-            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 truncate">
-              {{ step.prompt.substring(0, 50) }}...
-            </div>
-            <div v-if="step.conditions && step.conditions.length > 0" class="mt-2 text-xs text-blue-500">
-              {{ step.conditions.length }} condition{{ step.conditions.length === 1 ? '' : 's' }}
-            </div>
-            <div v-if="step.outputProcessor" class="mt-2 text-xs text-purple-500">
-              Output Processor
-            </div>
-          </div>
-          
-          <!-- Condition arrows -->
-          <template v-for="step in workflow.steps" :key="'conditions-' + step.id">
-            <template v-for="condition in step.conditions" :key="condition.id">
-              <!-- True path arrow -->
-              <div v-if="getStepById(condition.trueTargetStepId)" class="absolute pointer-events-none">
-                <svg 
-                  class="absolute top-0 left-0 w-full h-full"
-                  style="overflow: visible"
-                >
-                  <line 
-                    :x1="getStepById(step.id)!.position.x + 100" 
-                    :y1="getStepById(step.id)!.position.y + 20" 
-                    :x2="getStepById(condition.trueTargetStepId)!.position.x" 
-                    :y2="getStepById(condition.trueTargetStepId)!.position.y + 20"
-                    stroke="#10b981" 
-                    stroke-width="2" 
-                    marker-end="url(#arrowhead-true)"
-                  />
-                </svg>
-              </div>
-              
-              <!-- False path arrow -->
-              <div v-if="condition.falseTargetStepId && getStepById(condition.falseTargetStepId)" class="absolute pointer-events-none">
-                <svg 
-                  class="absolute top-0 left-0 w-full h-full"
-                  style="overflow: visible"
-                >
-                  <line 
-                    :x1="getStepById(step.id)!.position?.x + 100" 
-                    :y1="getStepById(step.id)!.position?.y + 40" 
-                    :x2="getStepById(condition.falseTargetStepId)!.position.x" 
-                    :y2="getStepById(condition.falseTargetStepId)!.position.y + 40"
-                    stroke="#ef4444" 
-                    stroke-width="2" 
-                    marker-end="url(#arrowhead-false)"
-                  />
-                </svg>
-              </div>
-              
-              <!-- Condition label -->
-              <div 
-                v-if="getStepById(condition.trueTargetStepId) || getStepById(condition.falseTargetStepId)"
-                class="absolute bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded"
-
-              >
-                {{ condition.description }}
-              </div>
-            </template>
-          </template>
-          
-          <!-- Arrow marker definition -->
-          <svg style="position: absolute; width: 0; height: 0">
             <defs>
               <marker 
                 id="arrowhead-true" 
@@ -144,7 +64,93 @@
                 <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
               </marker>
             </defs>
+            
+            <!-- Condition arrows -->
+            <template v-for="step in workflow.steps" :key="'conditions-' + step.id">
+              <template v-for="(condition, index) in (step.conditions || [])" :key="condition.id">
+                <!-- True path arrow -->
+                <g v-if="getStepById(condition.trueTargetStepId)">
+                  <line 
+                    :x1="step.position.x + 264" 
+                    :y1="step.position.y + 40" 
+                    :x2="getStepById(condition.trueTargetStepId).position.x" 
+                    :y2="getStepById(condition.trueTargetStepId).position.y + 40"
+                    stroke="#10b981" 
+                    stroke-width="2" 
+                    marker-end="url(#arrowhead-true)"
+                  />
+                  <!-- True condition label -->
+                  <text 
+                    :x="(step.position.x + 264 + getStepById(condition.trueTargetStepId).position.x) / 2"
+                    :y="step.position.y + 35"
+                    class="fill-green-600 text-xs"
+                    text-anchor="middle"
+                  >
+                    ✓ {{ condition.description }}
+                  </text>
+                </g>
+                
+                <!-- False path arrow -->
+                <g v-if="condition.falseTargetStepId && getStepById(condition.falseTargetStepId)">
+                  <line 
+                    :x1="step.position.x + 264" 
+                    :y1="step.position.y + 60" 
+                    :x2="getStepById(condition.falseTargetStepId).position.x" 
+                    :y2="getStepById(condition.falseTargetStepId).position.y + 60"
+                    stroke="#ef4444" 
+                    stroke-width="2" 
+                    marker-end="url(#arrowhead-false)"
+                  />
+                  <!-- False condition label -->
+                  <text 
+                    :x="(step.position.x + 264 + getStepById(condition.falseTargetStepId).position.x) / 2"
+                    :y="step.position.y + 80"
+                    class="fill-red-600 text-xs"
+                    text-anchor="middle"
+                  >
+                    ✗ {{ condition.description }}
+                  </text>
+                </g>
+              </template>
+            </template>
           </svg>
+          
+          <!-- Steps -->
+          <div 
+            v-for="step in workflow.steps"
+            :key="step.id"
+            :class="[
+              'absolute bg-white dark:bg-gray-700 border-2 rounded-lg p-4 w-64 cursor-pointer transition-all',
+              selectedStep?.id === step.id 
+                ? 'border-blue-500 shadow-lg' 
+                : 'border-gray-300 dark:border-gray-600'
+            ]"
+            :style="{ 
+              left: step.position.x + 'px', 
+              top: step.position.y + 'px',
+              zIndex: 10
+            }"
+            @click="selectedStep = step"
+          >
+            <div class="flex justify-between">
+              <h3 class="font-semibold truncate">{{ step.name }}</h3>
+              <button 
+                @click.stop="handleDeleteStep(step.id)"
+                class="text-red-500 hover:text-red-700"
+              >
+                <X class="w-4 h-4" />
+              </button>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 truncate">
+              {{ step.prompt ? step.prompt.substring(0, 50) + '...' : 'No prompt set' }}
+            </div>
+            <div v-if="step.conditions && step.conditions.length > 0" class="mt-2 text-xs text-blue-500">
+              {{ step.conditions.length }} condition{{ step.conditions.length === 1 ? '' : 's' }}
+            </div>
+            <div v-if="step.outputProcessor" class="mt-2 text-xs text-purple-500">
+              Output Processor
+            </div>
+          </div>
         </div>
         
         <button 
@@ -203,14 +209,14 @@
             <label class="block text-sm font-medium mb-2">Position</label>
             <div class="grid grid-cols-2 gap-2">
               <input
-                v-model="selectedStep.position.x"
+                v-model.number="selectedStep.position.x"
                 @input="handleUpdateStep(selectedStep)"
                 type="number"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 placeholder="X"
               />
               <input
-                v-model="selectedStep.position.y"
+                v-model.number="selectedStep.position.y"
                 @input="handleUpdateStep(selectedStep)"
                 type="number"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
@@ -225,7 +231,7 @@
             
             <!-- Existing conditions -->
             <div 
-              v-for="condition in selectedStep.conditions" 
+              v-for="condition in selectedStep.conditions || []" 
               :key="condition.id" 
               class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mb-2"
             >
@@ -332,7 +338,7 @@
                 <input
                   v-model="newCondition.description"
                   type="text"
-                  class="w full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   placeholder="Human-readable description"
                 />
               </div>
@@ -402,7 +408,8 @@ const handleAddStep = () => {
     name: `Step ${props.workflow.steps.length + 1}`,
     prompt: '',
     outputProcessor: '',
-    position: { x: 100, y: 100 + (props.workflow.steps.length * 120) }
+    position: { x: 100, y: 100 + (props.workflow.steps.length * 120) },
+    conditions: []
   };
   emit('update', { ...props.workflow, steps: [...props.workflow.steps, newStep] });
   selectedStep.value = newStep;
@@ -421,7 +428,7 @@ const handleDeleteStep = (id: string) => {
     ...props.workflow,
     steps: updatedSteps.map(step => ({
       ...step,
-      conditions: step.conditions?.filter(c => 
+      conditions: (step.conditions || []).filter(c => 
         c.sourceStepId !== id && 
         c.trueTargetStepId !== id && 
         c.falseTargetStepId !== id

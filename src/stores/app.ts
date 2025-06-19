@@ -39,6 +39,20 @@ export const useAppStore = defineStore('app', () => {
   const view = ref<'prompt' | 'workflows'>('prompt');
   const workflowHistory = ref<WorkflowExecution | null>(null);
 
+  // app.ts
+  const variables = ref<Record<string, string>>({});
+  const variableDefinitions = ref<Array<{name: string, defaultValue: string}>>([]);
+  
+  const addVariable = (name: string, defaultValue: string = '') => {
+    variableDefinitions.value.push({ name, defaultValue });
+    variables.value[name] = defaultValue;
+  };
+  
+  const applyVariables = (prompt: string) => {
+    return prompt.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+      return variables.value[varName] || match;
+    });
+  };
   // Computed
   const activeProject = computed(() => 
     projects.value.find(p => p.id === activeProjectId.value)
@@ -105,11 +119,12 @@ export const useAppStore = defineStore('app', () => {
   };
 
   const addToHistory = (historyItem: PromptHistoryItem) => {
+    console.log("addToHistory",historyItem)
     if (!activeProject.value) return;
     
     const updatedProject: Project = {
       ...activeProject.value,
-      history: [historyItem, ...activeProject.value.history].slice(0, 50)
+      history: [historyItem, ...activeProject.value.history]
     };
     
     projects.value = projects.value.map(p => 
@@ -250,7 +265,12 @@ export const useAppStore = defineStore('app', () => {
     createWorkflow,
     saveWorkflow,
     runWorkflow,
-    completeWorkflow
+    completeWorkflow,
+    
+    variables,
+    variableDefinitions,
+    addVariable,
+    applyVariables,
   };
 });
 
