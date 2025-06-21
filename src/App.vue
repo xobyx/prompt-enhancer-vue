@@ -1,5 +1,7 @@
 <template>
   <div :class="['min-h-screen transition-colors duration-300', darkMode ? 'dark bg-gray-900' : 'bg-gray-50']">
+
+    
     <!-- Workflow Builder View -->
     <WorkflowBuilder 
       v-if="store.isEditingWorkflow && store.activeWorkflow"
@@ -8,7 +10,10 @@
       @save="store.saveWorkflow"
       @cancel="store.isEditingWorkflow = false"
     />
-    
+    <ReverseEngineerPrompt 
+          v-else-if="store.view === 'reverse-engineering'"
+          @back="store.view = 'prompt'"
+    />
     <!-- Workflow Runner View -->
     <WorkflowRunner 
       v-else-if="store.isRunningWorkflow && store.activeWorkflow"
@@ -212,6 +217,13 @@
                 title="Workflows"
               >
                 <GitFork class="w-5 h-5" />
+              </button>
+              <button 
+                @click="store.view = 'reverse-engineering'"
+                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                title="Reverse Engineering"
+              >
+                <Search class="w-5 h-5" />
               </button>
               <button 
                 @click="store.isHistoryPanelOpen = true" 
@@ -502,7 +514,7 @@ import { computed, watch, onMounted } from 'vue';
 import { 
   Bot, Settings, Sparkles, Code, Zap, AlertCircle, Copy, Check, History, 
   Sun, Moon, Star, Download, RotateCw, LayoutGrid, X, Plus, ChevronsUpDown, 
-  TestTube2, GitFork, Play, ListTree, GitBranch
+  TestTube2, GitFork, Play, ListTree, GitBranch,Search
 } from 'lucide-vue-next';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -517,6 +529,7 @@ import LoadingSkeleton from './components/LoadingSkeleton.vue';
 import HistoryPanel from './components/HistoryPanel.vue';
 import PromptCard from './components/PromptCard.vue';
 import VariableEditor from './components/VariableEditor.vue';
+import ReverseEngineerPrompt from './components/ReverseEngineerPrompt.vue';
 // Store and utilities
 import { useAppStore } from './stores/app';
 import { promptVersions } from './constants/appConstants';

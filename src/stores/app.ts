@@ -36,7 +36,7 @@ export const useAppStore = defineStore('app', () => {
   const activeWorkflow = ref<Workflow | null>(null);
   const isEditingWorkflow = ref(false);
   const isRunningWorkflow = ref(false);
-  const view = ref<'prompt' | 'workflows'>('prompt');
+  const view = ref<'prompt' | 'workflows' | 'reverse-engineering'>('prompt');
   const workflowHistory = ref<WorkflowExecution | null>(null);
 
   // app.ts
