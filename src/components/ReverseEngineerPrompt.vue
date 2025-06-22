@@ -301,7 +301,7 @@ import {
 import LoadingSkeleton from './LoadingSkeleton.vue'
 import MarkdownRenderer from './MarkdownRenderer.vue'
 import Rtool from './Rtool.vue'
-import { inferPromptFromOutput, enhancePrompt, analyzeOutputStructure } from '../utils/reverseUtils'
+import { inferPromptFromOutput, enhancePrompt, analyzeOutputStructure } from '../utils/apiUtils'
 
 // Types
 interface AnalysisResult {

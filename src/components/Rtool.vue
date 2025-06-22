@@ -38,6 +38,7 @@
               v-model="apiConfig.model"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
               <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
               <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
               <option value="gemini-pro">Gemini Pro</option>
@@ -356,7 +357,7 @@ type ExampleKey = keyof typeof EXAMPLES;
 
 interface ApiConfig {
   apiKey: string;
-  model: 'gemini-1.5-pro' | 'gemini-1.5-flash' | 'gemini-pro';
+  model: 'gemini-2.5-flash' |'gemini-1.5-pro' | 'gemini-1.5-flash' | 'gemini-pro';
   temperature: number;
   maxTokens: number;
   topP: number;
@@ -480,7 +481,7 @@ const options = reactive<Options>({
 
 const apiConfig = reactive<ApiConfig>({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY || '', // Load from .env if available
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
   temperature: 0.7,
   maxTokens: 4096,
   topP: 0.95,
