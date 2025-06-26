@@ -131,7 +131,30 @@ export const useAppStore = defineStore('app', () => {
       p.id === activeProjectId.value ? updatedProject : p
     );
   };
-
+  const updateHistoryx= (historyItem: PromptHistoryItem) => {
+    if (!activeProject.value) return;
+    activeProject.value.history.map(h=>
+      h.id===historyItem.id?historyItem:h
+    );
+    
+  }
+  const updateHistory = (historyItem: PromptHistoryItem) => {
+    console.log("updateHistory",historyItem)
+    if (!activeProject.value) return;
+    
+    const updatedProject: Project = {
+      ...activeProject.value,
+      history: activeProject.value.history.map(h =>
+        h.inputPrompt === historyItem.inputPrompt ? historyItem : h
+      )
+    };
+    
+    projects.value = projects.value.map(p => 
+      p.id === activeProjectId.value ? updatedProject : p
+    );
+    
+    saveProjectsToStorage();
+  };
   const loadFromHistory = (historyItem: PromptHistoryItem) => {
     inputPrompt.value = historyItem.inputPrompt;
     selectedVersion.value = historyItem.version;
@@ -140,7 +163,7 @@ export const useAppStore = defineStore('app', () => {
     selectedVariantsForComparison.value = [];
     comparisonResults.value = [];
     showQuestionForm.value = false;
-    questionAnswers.value = {};
+    questionAnswers.value = historyItem.questionAnswers || {};
   };
 
   const resetForm = () => {
@@ -273,6 +296,7 @@ export const useAppStore = defineStore('app', () => {
     createProject,
     selectProject,
     addToHistory,
+    updateHistory,
     loadFromHistory,
     resetForm,
     toggleVariantForComparison,

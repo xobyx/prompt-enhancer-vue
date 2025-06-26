@@ -652,14 +652,12 @@ const handleSubmit = async (event: Event,isReEnhance: boolean = false) => {
       // If this is a re-enhance, update the existing history item
       if (isReEnhance && store.promptHistory.length > 0) {
         const lastHistoryIndex = store.promptHistory.length - 1;
-        store.promptHistory[lastHistoryIndex] = {
-          ...store.promptHistory[lastHistoryIndex],
-          result: jsonResponse,
-          questionAnswers: {...store.questionAnswers},
-          reEnhanced: true,
-          reEnhancedAt: new Date()
-        };
-        store.saveProjectsToStorage();
+        historyItem.questionAnswers= {...store.questionAnswers};
+        historyItem.result= jsonResponse;
+        historyItem.reEnhanced = true;
+        historyItem.reEnhancedAt= new Date();
+        store.updateHistory(historyItem);
+        //store.saveProjectsToStorage();
       } else if (!isReEnhance) {
         store.addToHistory(historyItem);
       }
@@ -737,7 +735,7 @@ const handleStartEdit = (promptId: string, content: string) => {
 };
 
 const handleSaveEdit = (promptId: string, newContent: string) => {
-  const variantIndex = store.variants.findIndex(v => v.id === promptId);
+  const variantIndex = store.variants.findIndex((v:any) => v.id === promptId);
   if (variantIndex !== -1) {
     store.variants[variantIndex].prompt = newContent;
     store.variants[variantIndex].title = `${store.variants[variantIndex].title} (Edited)`;
