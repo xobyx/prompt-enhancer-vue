@@ -487,9 +487,19 @@
                   :index="index"
                   :is-selected="store.selectedVariantsForComparison.includes(prompt.id)"
                   :copied-id="store.copied"
+                  
+                  :is-editing="store.editingPromptId === prompt.id"
+                  :edited-content="store.editedPromptContent"
+                  :test-input="store.testInput"
+                  :test-output="store.testResults[prompt.id]"
+                  :is-testing="store.testingPromptIds.includes(prompt.id)"
                   @copy="copyToClipboard"
                   @toggle-comparison="store.toggleVariantForComparison"
                   @setStartPrompt="(text,id)=>store.inputPrompt=text"
+                  @start-edit="handleStartEdit"
+                  @save-edit="handleSaveEdit"
+                  @cancel-edit="handleCancelEdit"
+                  @test-prompt="handleTestPrompt"
                 />
               </div>
             </div>
@@ -628,16 +638,31 @@ const handleSubmit = async (event: Event,isReEnhance: boolean = false) => {
     }
     console.log("isReEnhance : " ,isReEnhance)
     console.log("project",store.activeProject)
-    if (!isReEnhance && store.activeProject) {
+    if (store.activeProject) {
       const historyItem: PromptHistoryItem = { 
         id: Date.now().toString(), 
         timestamp: new Date(), 
         inputPrompt: store.inputPrompt, 
         version: store.selectedVersion, 
-        result: jsonResponse 
+        result: jsonResponse,
+        // Save question answers in history
+        questionAnswers: Object.keys(store.questionAnswers).length > 0 ? {...store.questionAnswers} : undefined
       };
-      console.log("historyItem",historyItem)
-      store.addToHistory(historyItem);
+      
+      // If this is a re-enhance, update the existing history item
+      if (isReEnhance && store.promptHistory.length > 0) {
+        const lastHistoryIndex = store.promptHistory.length - 1;
+        store.promptHistory[lastHistoryIndex] = {
+          ...store.promptHistory[lastHistoryIndex],
+          result: jsonResponse,
+          questionAnswers: {...store.questionAnswers},
+          reEnhanced: true,
+          reEnhancedAt: new Date()
+        };
+        store.saveProjectsToStorage();
+      } else if (!isReEnhance) {
+        store.addToHistory(historyItem);
+      }
     }
   } catch (err: any) {
     console.error('API Error:', err);
@@ -701,5 +726,75 @@ watch(() => store.activeProjectId, store.saveProjectsToStorage);
 onMounted(() => {
   store.initializeProjects();
 });
+
+
+
+
+// Add these new methods:
+const handleStartEdit = (promptId: string, content: string) => {
+  store.editingPromptId = promptId;
+  store.editedPromptContent = content;
+};
+
+const handleSaveEdit = (promptId: string, newContent: string) => {
+  const variantIndex = store.variants.findIndex(v => v.id === promptId);
+  if (variantIndex !== -1) {
+    store.variants[variantIndex].prompt = newContent;
+    store.variants[variantIndex].title = `${store.variants[variantIndex].title} (Edited)`;
+  }
+  store.editingPromptId = '';
+  store.editedPromptContent = '';
+};
+
+const handleCancelEdit = () => {
+  store.editingPromptId = '';
+  store.editedPromptContent = '';
+};
+
+const handleTestPrompt = async (promptId: string, promptContent: string, testInput: string) => {
+  if (!testInput.trim()) {
+    store.error = 'Please enter test input';
+    return;
+  }
+
+  store.testingPromptIds = [...store.testingPromptIds, promptId];
+  
+  try {
+    const genAI = new GoogleGenerativeAI(store.apiKey);
+    const model = genAI.getGenerativeModel({
+      model: store.modelParams.model,
+      generationConfig: { 
+        temperature: store.modelParams.temperature, 
+        maxOutputTokens: store.modelParams.maxOutputTokens 
+      }
+    });
+
+    const fullPrompt = `${promptContent}\n\n---\n\nUSER REQUEST:\n${testInput}`;
+    const generationResult = await model.generateContent(fullPrompt);
+    const responseText = await generationResult.response.text();
+    
+    store.testResults = {
+      ...store.testResults,
+      [promptId]: {
+        input: testInput,
+        output: responseText,
+        timestamp: new Date()
+      }
+    };
+  } catch (error: any) {
+    store.error = `Test failed: ${error.message}`;
+    store.testResults = {
+      ...store.testResults,
+      [promptId]: {
+        input: testInput,
+        output: '',
+        error: error.message,
+        timestamp: new Date()
+      }
+    };
+  } finally {
+    store.testingPromptIds = store.testingPromptIds.filter(id => id !== promptId);
+  }
+};
 </script>
 

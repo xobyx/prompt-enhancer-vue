@@ -26,6 +26,9 @@ export type PromptHistoryItem = {
   inputPrompt: string;
   version: string;
   result: any;
+  questionAnswers?: Record<string, string>;
+  reEnhanced?: boolean; // Add this line
+  reEnhancedAt?: Date; // Add this line
 };
 
 export type Project = {

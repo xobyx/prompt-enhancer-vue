@@ -219,8 +219,22 @@ export const useAppStore = defineStore('app', () => {
     activeWorkflow.value = updatedWorkflow;
     workflowHistory.value = execution;
   };
-
+  const editingPromptId=ref<string>('');
+  const editedPromptContent=ref<string>('');
+  const testInput=ref<string>('');
+  const testResults=ref<Record<string, {
+      input: string;
+      output: string;
+      error?: string;
+      timestamp: Date;
+  }>>({});
+  const testingPromptIds=ref<string[]>([]);
   return {
+    editingPromptId,
+    editedPromptContent,
+    testInput,
+    testResults,
+    testingPromptIds,
     // State
     apiKey,
     inputPrompt,
