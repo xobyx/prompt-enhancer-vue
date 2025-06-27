@@ -1,7 +1,6 @@
 <template>
-  <div :class="['min-h-screen transition-colors duration-300', darkMode ? 'dark bg-gray-900' : 'bg-gray-50']">
+  <div :class="['min-h-screen transition-colors duration-300', darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50']">
 
-    
     <!-- Workflow Builder View -->
     <WorkflowBuilder 
       v-if="store.isEditingWorkflow && store.activeWorkflow"
@@ -10,10 +9,12 @@
       @save="store.saveWorkflow"
       @cancel="store.isEditingWorkflow = false"
     />
+    
     <ReverseEngineerPrompt 
-          v-else-if="store.view === 'reverse-engineering'"
-          @back="store.view = 'prompt'"
+      v-else-if="store.view === 'reverse-engineering'"
+      @back="store.view = 'prompt'"
     />
+    
     <!-- Workflow Runner View -->
     <WorkflowRunner 
       v-else-if="store.isRunningWorkflow && store.activeWorkflow"
@@ -25,17 +26,19 @@
     />
     
     <!-- Workflow History View -->
-    <div v-else-if="store.workflowHistory" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex justify-between items-center mb-8">
+    <div v-else-if="store.workflowHistory" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div class="flex items-center gap-3">
-          <GitBranch class="w-8 h-8 text-blue-600 dark:text-blue-400" />
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          <div class="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
+            <GitBranch class="w-6 h-6 text-white" />
+          </div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             Workflow Execution History
           </h1>
         </div>
         <button 
           @click="store.workflowHistory = null"
-          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
+          class="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Back
         </button>
@@ -44,81 +47,93 @@
     </div>
     
     <!-- Workflows Management View -->
-    <div v-else-if="store.view === 'workflows'" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex justify-between items-center mb-8">
+    <div v-else-if="store.view === 'workflows'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div class="flex items-center gap-3">
-          <GitFork class="w-8 h-8 text-blue-600 dark:text-blue-400" />
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          <div class="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg">
+            <GitFork class="w-6 h-6 text-white" />
+          </div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             Workflow Management
           </h1>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <button 
             @click="store.view = 'prompt'"
-            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
+            class="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Back
           </button>
           <button 
             @click="store.createWorkflow"
-            class="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2"
+            class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold hover:from-green-700 hover:to-emerald-700"
           >
-            <Plus class="w-4 h-4" /> New
+            <Plus class="w-5 h-5" /> New Workflow
           </button>
         </div>
       </div>
       
       <!-- Workflows List -->
-      <div class="mb-8">
-        <h2 class="text-xl font-semibold mb-4">Workflows in Project</h2>
-        <div v-if="store.activeProject && store.activeProject.workflows.length === 0" class="bg-gray-50 dark:bg-gray-900 rounded-xl p-12 text-center border border-dashed border-gray-300 dark:border-gray-700">
-          <ListTree class="w-12 h-12 mx-auto text-gray-400" />
-          <h3 class="mt-4 text-lg font-medium">No workflows created yet</h3>
-          <p class="text-gray-500 mt-2">
-            Create your first workflow to chain prompts with conditional logic.
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Active Workflows</h2>
+        <div v-if="store.activeProject && store.activeProject.workflows.length === 0" class="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center">
+            <ListTree class="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No workflows created yet</h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Create your first workflow to chain prompts with conditional logic and automate complex tasks.
           </p>
           <button 
             @click="store.createWorkflow"
-            class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg"
+            class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-semibold hover:from-green-700 hover:to-emerald-700"
           >
-            Create Workflow
+            Create First Workflow
           </button>
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <div 
             v-for="workflow in store.activeProject?.workflows"
             :key="workflow.id" 
-            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group"
           >
-            <div class="p-5">
-              <div class="flex justify-between items-start">
-                <h3 class="font-semibold text-lg mb-2">{{ workflow.name }}</h3>
-                <div class="flex gap-1">
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ workflow.name }}</h3>
+                <div class="flex gap-2">
                   <button 
                     @click="editWorkflow(workflow)"
-                    class="p-1.5 text-gray-500 hover:text-blue-600"
+                    class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
                     title="Edit"
                   >
-                    <Settings class="w-4 h-4" />
+                    <Settings class="w-5 h-5" />
                   </button>
                   <button 
                     @click="store.runWorkflow(workflow)"
-                    class="p-1.5 text-gray-500 hover:text-green-600"
+                    class="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
                     title="Run"
                   >
-                    <Play class="w-4 h-4" />
+                    <Play class="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              <p class="text-sm text-gray-500 mb-4">
-                {{ workflow.steps.length }} steps, 
-                {{ workflow.executions?.length || 0 }} execution{{ (workflow.executions?.length || 0) === 1 ? '' : 's' }}
-              </p>
-              <div class="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded max-h-32 overflow-auto">
-                <pre>{{ workflow.steps.map(s => s.name).join(' → ') }}</pre>
+              <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <span class="flex items-center gap-1">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  {{ workflow.steps.length }} steps
+                </span>
+                <span class="flex items-center gap-1">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  {{ workflow.executions?.length || 0 }} execution{{ (workflow.executions?.length || 0) === 1 ? '' : 's' }}
+                </span>
+              </div>
+              <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl">
+                <div class="text-xs text-gray-600 dark:text-gray-300 font-medium max-h-20 overflow-auto">
+                  {{ workflow.steps.map(s => s.name).join(' → ') }}
+                </div>
               </div>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-900 px-5 py-3 text-sm text-gray-500">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 px-6 py-4 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-600">
               Created {{ workflow.createdAt ? formatDate(workflow.createdAt) : 'Unknown' }}
             </div>
           </div>
@@ -127,59 +142,73 @@
       
       <!-- Recent Executions -->
       <div>
-        <h2 class="text-xl font-semibold mb-4">Recent Executions</h2>
-        <div v-if="recentExecutions.length === 0" class="bg-gray-50 dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-700">
-          <History class="w-12 h-12 mx-auto text-gray-400" />
-          <h3 class="mt-4 font-medium">No executions yet</h3>
-          <p class="text-gray-500 mt-2">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Recent Executions</h2>
+        <div v-if="recentExecutions.length === 0" class="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center">
+            <History class="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No executions yet</h3>
+          <p class="text-gray-600 dark:text-gray-400">
             Run a workflow to see execution history here.
           </p>
         </div>
-        <div v-else class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workflow</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Steps Executed</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-for="{ workflow, execution } in recentExecutions" :key="execution.id">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ workflow.name }}
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span :class="[
-                    'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                    execution.steps.every(s => s.success)
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  ]">
-                    {{ execution.steps.every(s => s.success) ? 'Success' : 'Failed' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ execution.steps.length }} / {{ workflow.steps.length }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDate(execution.createdAt) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <button 
-                    @click="store.workflowHistory = execution"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    View Details
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else class="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Workflow</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Progress</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tr v-for="{ workflow, execution } in recentExecutions" :key="execution.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ workflow.name }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="[
+                      'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                      execution.steps.every(s => s.success)
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                    ]">
+                      {{ execution.steps.every(s => s.success) ? 'Success' : 'Failed' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                        <div 
+                          class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full" 
+                          :style="{ width: `${(execution.steps.length / workflow.steps.length) * 100}%` }"
+                        ></div>
+                      </div>
+                      <span class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ execution.steps.length }} / {{ workflow.steps.length }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {{ formatDate(execution.createdAt) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <button 
+                      @click="store.workflowHistory = execution"
+                      class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium hover:underline transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -196,45 +225,49 @@
       />
       
       <main class="flex-1 h-screen overflow-y-auto">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
           <!-- Header -->
-          <div class="flex justify-between items-center mb-8">
-            <div class="flex items-center gap-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div class="flex items-center gap-4">
               <button 
                 @click="store.isSidebarOpen = true" 
-                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors md:hidden" 
+                class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md md:hidden" 
                 title="Show Projects"
               >
                 <LayoutGrid class="w-5 h-5" />
               </button>
-              <Bot class="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Prompt Engineering Assistant</h1>
+              <div class="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
+                <Bot class="w-8 h-8 text-white" />
+              </div>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                Prompt Engineering Assistant
+              </h1>
             </div>
-            <div class="flex items-center gap-2 md:gap-4">
+            <div class="flex items-center gap-3">
               <button 
                 @click="store.view = 'workflows'"
-                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
                 title="Workflows"
               >
                 <GitFork class="w-5 h-5" />
               </button>
               <button 
                 @click="store.view = 'reverse-engineering'"
-                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
                 title="Reverse Engineering"
               >
                 <Search class="w-5 h-5" />
               </button>
               <button 
                 @click="store.isHistoryPanelOpen = true" 
-                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" 
+                class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md" 
                 title="Show History"
               >
                 <History class="w-5 h-5" />
               </button>
               <button 
                 @click="toggleDarkMode" 
-                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" 
+                class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md" 
                 :title="store.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
               >
                 <Sun v-if="store.darkMode" class="w-5 h-5" />
@@ -244,85 +277,93 @@
           </div>
 
           <!-- Main Form -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 mb-8">
-            <form @submit.prevent="handleSubmit" class="space-y-6">
+          <div class="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 mb-8">
+            <form @submit.prevent="handleSubmit" class="space-y-8">
               <!-- API Key -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Google Gemini API Key</label>
+              <div class="space-y-3">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Google Gemini API Key</label>
                 <input 
                   v-model="store.apiKey"
                   type="password" 
                   placeholder="Enter your Google Gemini API key" 
-                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" 
+                  class="w-full px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 shadow-sm focus:shadow-md" 
                   required
                 />
-                <p class="text-xs mt-1 text-gray-500 dark:text-gray-400">Your key is stored locally and never sent to our servers.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                  <div class="w-1 h-1 bg-green-500 rounded-full"></div>
+                  Your key is stored locally and never sent to our servers.
+                </p>
               </div>
               
               <!-- Enhancement Approach -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Enhancement Approach</label>
+              <div class="space-y-4">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Enhancement Approach</label>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div 
                     v-for="(version, key) in promptVersions"
                     :key="key" 
                     @click="store.selectedVersion = key" 
                     :class="[
-                      'p-4 border-2 rounded-lg cursor-pointer transition-all',
+                      'p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 group hover:shadow-lg',
                       store.selectedVersion === key 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-lg' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800/30'
                     ]"
                   >
-                    <div class="flex items-center gap-3 mb-2">
-                      <component :is="version.icon" />
-                      <h3 class="font-semibold text-gray-900 dark:text-white">{{ version.name }}</h3>
+                    <div class="flex items-center gap-3 mb-3">
+                      <div :class="[
+                        'p-2 rounded-lg transition-colors',
+                        store.selectedVersion === key ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      ]">
+                        <component :is="version.icon" class="w-5 h-5" />
+                      </div>
+                      <h3 class="font-bold text-gray-900 dark:text-white">{{ version.name }}</h3>
                     </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ version.description }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{{ version.description }}</p>
                   </div>
                 </div>
               </div>
               
               <!-- Input Prompt -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Original Prompt to Enhance</label>
+              <div class="space-y-3">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Original Prompt to Enhance</label>
                 <textarea 
                   v-model="store.inputPrompt"
                   placeholder="Enter your prompt that you want to enhance..." 
-                  rows="6" 
-                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-vertical" 
+                  rows="8" 
+                  class="w-full px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-vertical transition-all duration-200 shadow-sm focus:shadow-md" 
                   required
                 />
                 <VariableEditor v-if="store.variableDefinitions.length > 0" />
   
-              <!-- Add variable button -->
+                <!-- Add variable button -->
                 <button 
                   @click="store.addVariable('var1')"
-                  class="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  type="button"
+                  class="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
                 >
-                  <Plus class="w-4 h-4 mr-1" /> Add Variables to Prompt
+                  <Plus class="w-4 h-4 mr-2" /> Add Variables to Prompt
                 </button>
               </div>
 
-              
               <!-- Model Parameters -->
-              <details class="border dark:border-gray-700 rounded-lg p-4">
-                <summary class="cursor-pointer font-medium text-gray-700 dark:text-gray-300 flex justify-between items-center">
+              <details class="border border-gray-200 dark:border-gray-700 rounded-xl p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50">
+                <summary class="cursor-pointer font-semibold text-gray-700 dark:text-gray-300 flex justify-between items-center hover:text-gray-900 dark:hover:text-white transition-colors">
                   Model & Generation Parameters 
                   <ChevronsUpDown class="w-5 h-5 text-gray-500" />
                 </summary>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Model</label>
                     <select 
                       v-model="store.modelParams.model"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white transition-all duration-200 shadow-sm focus:shadow-md"
                     >
                       <option value="gemini-2.5-flash-preview-04-17">gemini-2.5-flash-preview-04-17</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Temperature: {{ store.modelParams.temperature }}
                     </label>
                     <input 
@@ -331,30 +372,28 @@
                       min="0" 
                       max="1" 
                       step="0.1" 
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" 
+                      class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider" 
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Tokens</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Max Tokens</label>
                     <input 
                       v-model="store.modelParams.maxOutputTokens"
                       type="number" 
                       min="1" 
                       max="8192" 
-                      
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white transition-all duration-200 shadow-sm focus:shadow-md"
                     />
                   </div>
                 </div>
               </details>
               
               <!-- Submit Buttons -->
-              <div class="flex gap-3 pt-2">
+              <div class="flex gap-4 pt-2">
                 <button
-                  input="submit"
                   type="submit"
-                 
-                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  :disabled="store.loading"
+                  class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-8 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <template v-if="store.loading && !store.isComparing">
                     <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -369,7 +408,7 @@
                   v-if="store.result"
                   @click="store.resetForm" 
                   type="button"
-                  class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
+                  class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <RotateCw class="w-5 h-5" />
                   New Session
@@ -379,9 +418,11 @@
           </div>
 
           <!-- Error Display -->
-          <div v-if="store.error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-lg p-4 mb-8 flex items-center gap-2">
-            <AlertCircle class="w-5 h-5" /> 
-            {{ store.error }}
+          <div v-if="store.error" class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-xl p-6 mb-8 flex items-center gap-3 shadow-sm">
+            <div class="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
+              <AlertCircle class="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div class="font-medium">{{ store.error }}</div>
           </div>
           
           <!-- Loading Skeleton -->
@@ -398,10 +439,10 @@
           />
 
           <!-- Results -->
-          <div v-if="store.result && !store.loading" class="space-y-6">
+          <div v-if="store.result && !store.loading" class="space-y-8">
             <!-- Raw Response Warning -->
-            <div v-if="store.result.raw_response" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-8">
-              <div class="flex items-center gap-3 mb-4">
+            <div v-if="store.result.raw_response" class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-8 mb-8 shadow-sm">
+              <div class="flex items-start gap-4 mb-6">
                 <AlertCircle class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                 <h2 class="text-xl font-semibold text-yellow-800 dark:text-yellow-200">Partial or Malformed Response</h2>
               </div>
@@ -507,7 +548,7 @@
         </div>
       </main>
     </div>
-    
+    <NewRev/>
     <!-- History Panel -->
     <HistoryPanel
       v-if="store.isHistoryPanelOpen && store.activeProject"
@@ -533,6 +574,7 @@ import ProjectSidebar from './components/ProjectSidebar.vue';
 import ComparisonPanel from './components/ComparisonPanel.vue';
 import WorkflowBuilder from './components/WorkflowBuilder.vue';
 import WorkflowRunner from './components/WorkflowRunner.vue';
+import NewRev from './components/NewRev.vue';
 import WorkflowHistoryView from './components/WorkflowHistoryView.vue';
 import MarkdownRenderer from './components/MarkdownRenderer.vue';
 import LoadingSkeleton from './components/LoadingSkeleton.vue';
