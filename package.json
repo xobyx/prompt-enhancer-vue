@@ -1,5 +1,5 @@
 {
-  "name": "prompt-enhancer-vue",
+  "name": "prompt-master",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@vueuse/core": "^13.3.0",
+    "diff": "^8.0.2",
     "lucide-vue-next": "^0.516.0",
     "marked": "^15.0.12",
     "pinia": "^3.0.1",

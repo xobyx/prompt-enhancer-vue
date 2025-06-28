@@ -167,6 +167,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'workflows', icon: GitFork, label: 'Workflows', path: '/workflows' },
   { id: 'reverse-engineering', icon: Search, label: 'Reverse Engineering', path: '/reverse-engineering' },
   { id: 'logic-analysis', icon: Brain, label: 'Logic Analysis', path: '/logic-analysis' },
+  { id: 'prompt-versioning', icon: GitFork, label: 'Prompt Versioning', path: '/prompt-versioning' },
   { id: 'code-gen', icon: Code, label: 'Code Generator', path: '/code-generator' },
   { id: 'automation', icon: Zap, label: 'Automation', path: '/automation' }
 ]

@@ -133,3 +133,16 @@ export interface ExecutionStep {
   executedAt: Date;
   success: boolean;
 }
+
+export type PromptVersion = {
+  timestamp: Date;
+  content: string;
+};
+
+export type VersionedPrompt = {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  versions: PromptVersion[];
+};

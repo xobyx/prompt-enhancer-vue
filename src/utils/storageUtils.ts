@@ -66,3 +66,27 @@ export const setDarkModePreference = (darkMode: boolean) => {
   localStorage.setItem('darkMode', darkMode.toString());
 };
 
+export const loadVersionedPrompts = (): VersionedPrompt[] => {
+  try {
+    const savedPromptsData = localStorage.getItem('versionedPrompts');
+    if (!savedPromptsData) return [];
+
+    const savedPrompts = JSON.parse(savedPromptsData) as VersionedPrompt[];
+    return savedPrompts.map((p: any) => ({
+      ...p,
+      createdAt: new Date(p.createdAt),
+      updatedAt: new Date(p.updatedAt),
+      versions: p.versions.map((v: any) => ({...v, timestamp: new Date(v.timestamp)}))
+    }));
+  } catch (e) {
+    console.error("Failed to parse versioned prompts from localStorage", e);
+    return [];
+  }
+};
+
+export const saveVersionedPrompts = (prompts: VersionedPrompt[]) => {
+  if (prompts.length > 0) {
+    localStorage.setItem('versionedPrompts', JSON.stringify(prompts));
+  }
+};
+

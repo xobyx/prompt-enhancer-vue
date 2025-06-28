@@ -61,6 +61,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'logic-analysis',
     component: LogicAnalysisView,
     meta: { title: 'Logic Analysis' }
+  },
+  {
+    path: '/prompt-versioning/:id?',
+    name: 'prompt-versioning',
+    component: () => import('../views/PromptVersioningView.vue'),
   }
 ]
 
