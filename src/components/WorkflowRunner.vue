@@ -336,6 +336,7 @@ const processStepConditions = (
 };
 
 const runWorkflow = async () => {
+  console.log(props.workflow)
   if (!props.workflow.steps.length) return;
   
   isRunning.value = true;
@@ -478,6 +479,7 @@ const runWorkflow = async () => {
     }
     
     addLog(`Workflow execution completed. Executed ${visited.size}/${props.workflow.steps.length} steps`);
+    console.log(execution)
     emit('complete', execution);
     
   } catch (error: any) {

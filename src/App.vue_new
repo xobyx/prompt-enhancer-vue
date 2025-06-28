@@ -1,0 +1,91 @@
+<template>
+  <div :class="['min-h-screen transition-colors duration-300', darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50']">
+    
+          
+          <div class="flex items-center gap-3">
+            <button 
+              @click="router.push('/')"
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Home"
+            >
+              <Home class="w-5 h-5" />
+            </button>
+            <button 
+              @click="router.push('/workflows')"
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Workflows"
+            >
+              <GitFork class="w-5 h-5" />
+            </button>
+            <button 
+              @click="router.push('/reverse-engineering')"
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Reverse Engineering"
+            >
+              <Search class="w-5 h-5" />
+            </button>
+            <button 
+              @click="store.isHistoryPanelOpen = true" 
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md" 
+              title="Show History"
+            >
+              <History class="w-5 h-5" />
+            </button>
+            <button 
+              @click="toggleDarkMode" 
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md" 
+              :title="store.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            >
+              <Sun v-if="store.darkMode" class="w-5 h-5" />
+              <Moon v-else class="w-5 h-5" />
+            </button>
+            <button 
+              @click="router.push('/logic-analysis')"
+              class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md" 
+              :title="store.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            >
+              <GitFork class="w-5 h-5" />
+            </button>
+          
+        </div>
+    <router-view />
+    
+    <HistoryPanel
+      v-if="store.isHistoryPanelOpen && store.activeProject"
+      :active-project-name="store.activeProject.name"
+      :prompt-history="store.promptHistory"
+      @load-from-history="store.loadFromHistory"
+      @close="store.isHistoryPanelOpen = false"
+    />
+  </div>
+</template>
+
+<script setup>
+import { useRouter } from 'vue-router'
+import {
+  Bot, Settings, Sparkles, Code, Zap, AlertCircle, Copy, Check, History, 
+  Sun, Moon, Star, Download, RotateCw, LayoutGrid, X, Plus, ChevronsUpDown, 
+  TestTube2, GitFork, Play, ListTree, GitBranch, Search,Home
+} from 'lucide-vue-next'
+const router = useRouter()
+import { computed ,onMounted,watch} from 'vue'
+import { useAppStore } from './stores/app'
+import HistoryPanel from './components/HistoryPanel.vue'
+
+const store = useAppStore()
+const darkMode = computed(() => store.darkMode)
+
+onMounted(() => {
+  store.initializeProjects();
+});
+
+watch(() => store.darkMode, store.savePreferences);
+watch(() => store.apiKey, store.savePreferences);
+watch(() => store.projects, store.saveProjectsToStorage, { deep: true });
+watch(() => store.activeProjectId, store.saveProjectsToStorage);
+
+// Lifecycle
+onMounted(() => {
+  store.initializeProjects();
+});
+</script>

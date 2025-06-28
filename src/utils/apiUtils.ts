@@ -172,7 +172,7 @@ export async function executeGeminiPrompt(
   params: ModelParams
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  
+  console.log(params)
   const generationConfig = {
     temperature: params.temperature,
     maxOutputTokens: params.maxOutputTokens,
