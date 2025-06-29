@@ -228,4 +228,41 @@ onMounted(() => {
     border-color: rgba(255, 255, 255, 0.2);
   }
 }
+
+.markdown-content :deep(*) {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Specifically target common problematic elements */
+.markdown-content :deep(pre),
+.markdown-content :deep(code),
+.markdown-content :deep(table),
+.markdown-content :deep(img),
+.markdown-content :deep(p),
+.markdown-content :deep(div) {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  word-break: break-word !important;
+}
+
+/* Handle code blocks specifically */
+.markdown-content :deep(pre) {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-x: auto !important;
+}
+
+/* Handle tables */
+.markdown-content :deep(table) {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+/* Handle images */
+.markdown-content :deep(img) {
+  max-width: 100% !important;
+  height: auto !important;
+}
 </style>
