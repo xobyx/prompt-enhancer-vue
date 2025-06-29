@@ -23,7 +23,13 @@ Return your response as a JSON object with this exact structure:
       "prompt": "The enhanced prompt text here",
       "reasoning": "Explanation of improvements made and why they enhance effectiveness",
       "strengths": ["List of key strengths of this variant"],
-      "ideal_use_cases": ["Specific scenarios where this variant excels"]
+      "ideal_use_cases": ["Specific scenarios where this variant excels"],
+      "appropriate_generation_config": {
+            "temperature": "model generate generation number",
+            "topP": "model generate topP parameter number",
+            "topK": "model generate topK parameter number",
+            "reason":"reason why you choosed those values",
+      }
     }
   ],
   "questions": ["Optional clarifying questions if the original prompt is ambiguous"]
@@ -49,7 +55,13 @@ Return as JSON:
       "prompt": "Enhanced prompt with technical optimizations",
       "reasoning": "Technical rationale for improvements",
       "strengths": ["Technical advantages"],
-      "best_applications": ["Optimal technical use cases"]
+      "best_applications": ["Optimal technical use cases"],
+      "appropriate_generation_config": {
+            "temperature": "model generate generation number",
+            "topP": "model generate topP parameter number",
+            "topK": "model generate topK parameter number",
+            "reason":"reason why you choosed those values",
+      }
     }
   ],
   "clarification_needed": ["Technical questions if specifications are unclear"]
@@ -76,7 +88,13 @@ Provide 3-4 creative variants as JSON:
       "prompt": "Creatively enhanced prompt",
       "reasoning": "Creative rationale and inspiration techniques used",
       "strengths": ["Creative advantages"],
-      "ideal_use_cases": ["Best creative applications"]
+      "ideal_use_cases": ["Best creative applications"],
+      "appropriate_generation_config": {
+            "temperature": "model generate generation number",
+            "topP": "model generate topP parameter number",
+            "topK": "model generate topK parameter number",
+            "reason":"reason why you choosed those values",
+      }
     }
   ],
   "inspiration_questions": ["Questions to unlock more creative potential"]
@@ -103,7 +121,13 @@ Create 3 performance-optimized variants as JSON:
       "prompt": "Performance-optimized prompt",
       "reasoning": "Performance improvements and efficiency gains",
       "strengths": ["Performance advantages"],
-      "ideal_use_cases": ["Optimal performance scenarios"]
+      "ideal_use_cases": ["Optimal performance scenarios"],
+      "appropriate_generation_config": {
+            "temperature": "model generate generation number",
+            "topP": "model generate topP parameter number",
+            "topK": "model generate topK parameter number",
+            "reason":"reason why you choosed those values",
+      }
     }
   ],
   "efficiency_questions": ["Questions about performance requirements"]

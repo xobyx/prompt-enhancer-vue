@@ -6,18 +6,33 @@ export interface _Condition {
   expression: string;
   description: string;
 }
+export type GenerationConfig {
+            temperature: string;
+            topP: string;
+            topK: string;
+            reason: string;
+      }
 export type PromptVariant = {
   id: string;
   prompt: string;
+
   category?: string;
-  reasoning?: string;
-  strengths?: string[];
-  ideal_use_cases?: string[];
-  optimization_target?: string;
-  technical_notes?: string;
   architecture_type?: string;
-  complexity_level?: string;
+  optimization_target?: string;
+  
+  reasoning?: string; // all
+  strengths?: string[];//all
+
+  ideal_use_cases?: string[];
   best_applications?: string[];
+
+
+  
+  technical_notes?: string;
+  
+  complexity_level?: string;
+  
+  appropriate_generation_config:GenerationConfig;
 };
 
 export type PromptHistoryItem = {

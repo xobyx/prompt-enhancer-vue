@@ -168,15 +168,16 @@
               </div>
             </details>
 
-            <!-- Submit Buttons -->
-            <div class="flex gap-4 pt-2">
+            
+            <!-- Submit Buttons  FIXED SECTION -->
+            <div class="flex flex-1 gap-4 pt-2 justify-between">
               <button
                 type="submit"
                 :disabled="store.loading"
-                class="flex bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-8 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                class="flex bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-6 sm:px-8 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto">
                 <template v-if="store.loading && !store.isComparing">
                   <div
-                    class="w-0 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Enhancing...
                 </template>
                 <template v-else>
@@ -188,13 +189,14 @@
                 v-if="store.result"
                 @click="store.resetForm"
                 type="button"
-                class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                <RotateCw class="w-0 h-5" />
+                class="flex bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-4 px-6 sm:px-8 rounded-xl font-bold items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto">
+                <RotateCw class="w-5 h-5" />
                 New Session
               </button>
             </div>
-          </form>
-        </div>
+            </form>
+            </div>
+        
 
         <!-- Error Display -->
         <div
@@ -384,7 +386,7 @@ const router = useRouter()
 const store = useAppStore()
 
 const analysisText = computed(() => 
-  store.result?.analysis || store.result?.initial_assessment || store.result?.architectural_analysis
+  store.result?.analysis || store.result?.architectural_analysis || store.result?.creative_assessment || store.result?.performance_analysis 
 )
 
 const selectedVariantsForComparison = computed(() => 
@@ -444,7 +446,7 @@ const handleSubmit = async (event: Event, isReEnhance: boolean = false) => {
     const jsonResponse = parseGeminiResponse(responseText)
     store.result = jsonResponse
     
-    const questions = jsonResponse.questions || jsonResponse.clarifying_questions || jsonResponse.clarification_needed
+    const questions = jsonResponse.questions || jsonResponse.clarification_needed || jsonResponse.inspiration_questions||jsonResponse.efficiency_questions
     if (questions && questions.length > 0 && !isReEnhance) {
       store.showQuestionForm = true
     }

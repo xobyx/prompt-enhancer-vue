@@ -9,7 +9,7 @@
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-2">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-0">
-        {{ prompt.category || prompt.architecture_type || `Variant ${index + 1}` }}
+        {{ prompt.category || prompt.architecture_type ||prompt.optimization_target || `Variant ${index + 1}` }}
       </h3>
       
       <div class="flex items-center gap-2 flex-wrap">
@@ -110,7 +110,7 @@
         
         <div
           v-else
-          class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg max-h-96 overflow-y-auto border"
+          class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg max-w-full  max-h-96 overflow-x-auto overflow-y-auto border"
         >
           <MarkdownRenderer :content="prompt.prompt" />
         </div>
@@ -141,14 +141,37 @@
         </div>
 
         <!-- Ideal Use Cases Section -->
-        <div v-if="prompt.ideal_use_cases">
+        <div v-if="p_usage">
           <h4 class="font-medium text-gray-900 dark:text-white mb-2">
             Ideal Use Cases:
           </h4>
           <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <li v-for="(useCase, i) in prompt.ideal_use_cases" :key="i" class="flex items-start gap-2">
+            <li v-for="(useCase,i) in p_usage" :key="i" class="flex items-start gap-2">
               <span class="text-blue-500 mt-0.5">•</span>
               {{ useCase }}
+            </li>
+          </ul>
+        </div>
+        <div v-if="prompt.appropriate_generation_config" 
+             class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+          
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+            Appropriate Generation Config
+          </h4>
+        
+          <ul class="space-y-2">
+            <li v-for="[k, v] in Object.entries(prompt.appropriate_generation_config)" 
+                :key="k" 
+                class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <template v-if="k!='reason'">
+              <span class="text-gray-700 dark:text-gray-300 font-medium">{{ k }}</span>
+              <span class="bg-blue-500 text-white px-2 py-1 rounded text-sm font-medium">{{ v }}</span>
+              </template>
+              <template v-else>
+              <span class="text-gray-700 dark:text-gray-300 font-medium">{{ v }}</span>
+              
+              </template>
             </li>
           </ul>
         </div>
@@ -243,7 +266,7 @@
 <script setup lang="ts">
 import { Check, Copy, Edit, X, TestTube2 } from "lucide-vue-next";
 import MarkdownRenderer from "./MarkdownRenderer.vue";
-import type { PromptVariant } from "../types/appTypes";
+import type { PromptVariant} from "../types/appTypes";
 import { computed, ref, watch, onMounted } from 'vue';
 
 interface Props {
@@ -290,6 +313,16 @@ const localTestInput = ref("");
 onMounted(() => {
   localEditContent.value = props.editedContent || props.prompt.prompt;
   localTestInput.value = props.testInput || "";
+});
+
+const p_usage = computed(() => {
+  if (props.prompt.ideal_use_cases && props.prompt.ideal_use_cases.length) {
+    return prompt.ideal_use_cases;
+  } else if (props.prompt.best_applications && props.prompt.best_applications.length) {
+    return props.prompt.best_applications;
+  } else {
+    return []; // or return null; but we have to decide the expected type
+  }
 });
 
 // Watch for prop changes
