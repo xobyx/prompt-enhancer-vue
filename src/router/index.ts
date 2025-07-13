@@ -7,7 +7,7 @@ import WorkflowHistoryView from '../views/WorkflowHistoryView.vue'
 import ReverseEngineeringView from '../views/ReverseEngineeringView.vue'
 import LogicAnalysisView from '../views/LogicAnalysisView.vue'
 import a from '../views/a.vue'
-
+import Lyra from '../views/Lyra.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -66,7 +66,13 @@ const routes: Array<RouteRecordRaw> = [
     path: '/prompt-versioning/:id?',
     name: 'prompt-versioning',
     component: () => import('../views/PromptVersioningView.vue'),
-  }
+  },
+  {
+    path: '/lyra',
+    name: 'Lyra',
+    component: Lyra,
+    meta: { title: 'Lyra' }
+  },
 ]
 
 const router = createRouter({
