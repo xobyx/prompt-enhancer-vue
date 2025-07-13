@@ -449,6 +449,26 @@ interface Emits {
   (e: "testPrompt", promptId: string, promptContent: string, testInput: string): void;
 }
 
+const loadTestInput = () => {
+  const saved = localStorage.getItem(`savedTestInputs-${props.prompt.id}`);
+  savedTestInputs.value = saved ? JSON.parse(saved) : [];
+};
+
+
+
+const saveTestInput = (input: string) => {
+  if (!input.trim()) return;
+  
+  // Avoid duplicates
+  if (!savedTestInputs.value.includes(input)) {
+    savedTestInputs.value = [input, ...savedTestInputs.value].slice(0, 10); // Keep last 10
+    localStorage.setItem(
+      `savedTestInputs-${props.prompt.id}`, 
+      JSON.stringify(savedTestInputs.value)
+    );
+  }
+};
+
 const props = withDefaults(defineProps<Props>(), {
   isEditing: false,
   editedContent: "",
@@ -469,7 +489,7 @@ const editTextarea = ref<HTMLTextAreaElement>();
 onMounted(() => {
   localEditContent.value = props.editedContent || props.prompt.prompt;
   localTestInput.value = props.testInput || "";
-  loadSavedTestInputs();
+  loadTestInput();
 });
 
 // Computed properties
@@ -483,7 +503,7 @@ const p_usage = computed(() => {
   }
 });
 
-const loadSavedTestInputs= ()=>{}
+
 const getPromptTitle = computed(() => {
   return props.prompt.category || 
          props.prompt.architecture_type || 
@@ -581,13 +601,16 @@ const runTest = () => {
 };
 
 const clearTestResults = () => {
-  // This would need to be implemented in the parent component
-  // emit("clearTestResults", props.prompt.id);
+  localTestInput.value = "";
+  emit("clearTestResults", props.prompt.id);
 };
 
 const saveTestResult = () => {
-  // This would need to be implemented in the parent component
-  // emit("saveTestResult", props.prompt.id, props.testOutput);
+  if (!props.testOutput) return;
+  emit("saveTestResult", {
+    promptId: props.prompt.id,
+    ...props.testOutput
+  });
 };
 
 const formatTimestamp = (timestamp?: Date) => {
