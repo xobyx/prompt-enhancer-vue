@@ -63,11 +63,11 @@ export const useAppStore = defineStore('app', () => {
   );
 
   const variants = computed(() => 
-    result.value?.generatedPrompts || result.value?.enhanced_variants || result.value?.engineered_variants || []
+    result.value?.generatedPrompts || result.value?.enhanced_variants || result.value?.engineered_variants || result.value?.optimized_variants || []
   );
 
   const questions = computed(() => 
-    result.value?.questions || result.value?.clarifying_questions || result.value?.clarification_needed || []
+    result.value?.questions || result.value?.clarifying_questions || result.value?.clarification_needed || result.value?.efficiency_questions || []
   );
 
   // Actions
